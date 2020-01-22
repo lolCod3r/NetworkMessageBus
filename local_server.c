@@ -1,5 +1,4 @@
 #include "utils.h"
-
 void udp_listener(int msgid);
 int send_msg_to_udp(MsgBuf msg);
 void create_tcp(int msgq);
@@ -7,16 +6,33 @@ void handle_tcp(int connfd, int msgq);
 int put_in_msg_queue(int msgid, MsgBuf buf);
 int retrieve_msg_queue(int msgq, long type, MsgBuf* msgp);
 
-int main(){
-	int msgqid = msgget (IPC_PRIVATE, IPC_CREAT | 0644);
-	if(msgqid < 0) die("msgget() failed");	
+/*
+*  2 message queue from now on
+*  One for sending messages to hosts in other galaxy (Remote queue)
+*  One for sending messages to hosts in own galaxy (Local queue)
+*  Queue id will be decided by port number of the local server(fixed)
+*/
 
-	pid_t p = fork();
-	if(p < 0)
-		die("fork() failed");
-	else if(p == 0){
-		udp_listener(msgqid);	
-		exit(0);
+
+
+int main(){
+	// My port number
+	int myPort = ;
+	int someRandomNum = 17;
+	char somePath[someRandomNum];
+	sprintf(somePath,"%d",myPort);
+	key_t localQueue = ftok(somePath,someRandomNumber);
+	key_t remoteQueue = ftok(somePath,someRandomNumber<<1);
+	
+	int localId = msgget (localQueue, IPC_CREAT | 0644);
+	int remoteId = msgget(remoteQueue, IPC_CREAT | 0644);
+	//if(msgqid < 0) die("msgget() failed");	
+	
+	//No need of creating child process as the server would be single threaded (Non-blocking IO)
+	
+	while(1){
+		
+	
 	}
 	create_tcp(msgqid);
 	return 0;
