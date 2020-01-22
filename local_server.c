@@ -13,6 +13,10 @@ int retrieve_msg_queue(int msgq, long type, MsgBuf* msgp);
 *  Queue id will be decided by port number of the local server(fixed)
 */
 
+/*
+* Thinking of using only one queue 
+*/ 
+
 
 
 int main(){
@@ -30,11 +34,15 @@ int main(){
 	
 	//No need of creating child process as the server would be single threaded (Non-blocking IO)
 	
-	while(1){
-		
+	// Initiating UDP receiver 
+	int listenerSocket = initUDPListener();
+	// RemoteQueue Checker
 	
+	while(1){
+		// Message receive subRoutine for getting message from remoteQueue
+		
 	}
-	create_tcp(msgqid);
+	
 	return 0;
 }
 
@@ -46,17 +54,27 @@ int put_in_msg_queue(int msgid, MsgBuf buf){
 int retrieve_msg_queue(int msgq, long type, MsgBuf* msgp){
 	return msgrcv(msgq, msgp, sizeof(msgp->mtext), type, 0);
 }
+/*
+* Initiating UDP Receive Socket
+*/
 
-
-void udp_listener(int msgid){
-	printf("udp_listener(%d)\n", msgid);
+int initUdpReceiver(){
+// 	printf("udp_receiver(%d)\n", msgid);
 	int sock = socket(AF_INET,SOCK_DGRAM,0);
 	struct sockaddr_in recvaddr;
 	recvaddr.sin_family = AF_INET;
 	recvaddr.sin_addr.s_addr = INADDR_ANY;
 	recvaddr.sin_port = htons(UDP_PORT);
+	// error block for bind
 	bind(sock,(struct sockaddr *)&recvaddr,sizeof(recvaddr));
+	// success ->
+	// printf("UDP listener created on  %d\n",UDP_PORT);
+	
+	return sock;
+}
 
+/*
+{
 	for (;;) { 
 		MsgBuf buf;
 		ssize_t t = recv(sock, &buf, sizeof(buf), 0);
@@ -72,7 +90,7 @@ void udp_listener(int msgid){
 	close(sock);
 	return;
 }
-
+*/
 // Tcp receive from nmb client
 void create_tcp(int msgq){
 	printf("create_tcp(%d)\n", msgq);
