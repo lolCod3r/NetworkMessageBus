@@ -14,9 +14,12 @@ int retrieve_msg_queue(int msgq, long type, MsgBuf* msgp);
 */
 
 /*
-* Thinking of using only one queue 
-*/ 
+* Since Sys V message queue does not give file descriptors for Event-Driven IO
+* We are taking our own time as 1 sec for not using more CPU cycles.
+* 
+*/
 
+// Need to Decide on message
 
 
 int main(){
@@ -29,23 +32,52 @@ int main(){
 	key_t remoteQueue = ftok(somePath,someRandomNumber<<1);
 	
 	int localId = msgget (localQueue, IPC_CREAT | 0644);
+	if(localId <0){ die("mesget failed");}
 	int remoteId = msgget(remoteQueue, IPC_CREAT | 0644);
-	//if(msgqid < 0) die("msgget() failed");	
+	if(remoteId < 0) { die("mesget failed");}
+	
 	
 	//No need of creating child process as the server would be single threaded (Non-blocking IO)
 	
 	// Initiating UDP receiver 
 	int listenerSocket = initUDPListener();
-	// RemoteQueue Checker
+	int senderSocket = socket(AF_INET,SOCK_DGRAM|SOCK_NONBLOCK,0);
+	if(senderSocket == -1){
+		die("Error Sender Socket Creation");
+	}
+	MsgBuf msg;
+	uint32_t remoteIP, localIP;
+	struct sockaddr_in destAddr;
+	destAddr.sin_family = AF_INET;
+	destAddr.sin_port = htons(UDP_PORT);
+	localIP = getLocalIP();
 	
 	while(1){
 		// Message receive subRoutine for getting message from remoteQueue
-		
+		if(msgrcv(remoteId,&msg,sizeof(msg),0,IPC_NOWAIT|MSG_NOERROR) != -1){
+			remoteIP = extractIp(msg.mtext);
+			if(remoteIP == localIP){
+				if(msgsnd(localId, &msg, sizeof(msg),IPC_NOWAIT) == -1){
+					die("Failed to send in local Message Queue");
+				}
+			}
+			else{
+				sendAddr.sin_addr.s_addr = remoteIP;
+				if(sendto(senderSocket, msg, sizeof(msg),0,(struct sockaddr *)&destAddr,sizeof(destAddr)) == -1){
+					// If failed to recv send again 
+					die("Failed to Send to the destination");
+				}
+			}
+		/*
+		* Remove message from remote queue
+		*/
+		};
+		// Listen to message coming from other galaxies
+		// recv for # seconds.
 	}
 	
 	return 0;
 }
-
 
 int put_in_msg_queue(int msgid, MsgBuf buf){
 	return msgsnd(msgid, &(buf.mtype), sizeof(buf.mtext), 0);
@@ -57,7 +89,6 @@ int retrieve_msg_queue(int msgq, long type, MsgBuf* msgp){
 /*
 * Initiating UDP Receive Socket
 */
-
 int initUdpReceiver(){
 // 	printf("udp_receiver(%d)\n", msgid);
 	int sock = socket(AF_INET,SOCK_DGRAM,0);
@@ -69,7 +100,6 @@ int initUdpReceiver(){
 	bind(sock,(struct sockaddr *)&recvaddr,sizeof(recvaddr));
 	// success ->
 	// printf("UDP listener created on  %d\n",UDP_PORT);
-	
 	return sock;
 }
 
@@ -91,7 +121,8 @@ int initUdpReceiver(){
 	return;
 }
 */
-// Tcp receive from nmb client
+// No need of a TCP client
+/*
 void create_tcp(int msgq){
 	printf("create_tcp(%d)\n", msgq);
 	int connfd, sock;
@@ -121,8 +152,9 @@ void create_tcp(int msgq){
 	}
 	close(sock);
 }
-
-
+*/
+// In code handling
+/*
 int send_msg_to_udp(MsgBuf msg){
 	int sock = socket(AF_INET,SOCK_DGRAM,0);
 	struct sockaddr_in sendaddr;
@@ -131,12 +163,12 @@ int send_msg_to_udp(MsgBuf msg){
 	extract(msg.mtype, &(sendaddr.sin_addr.s_addr), &p);
 	sendaddr.sin_port = htons(UDP_PORT);
 	msg.mtype = (long)p;
-	
-	
 	return sendto(sock, &(msg.mtype), sizeof(msg), 0, (struct sockaddr *)&sendaddr,sizeof(sendaddr));
 }
+*/
 
-//tcp single child connection handler
+//No Need of TCP handler
+/*
 void handle_tcp(int connfd, int msgq){
 	TcpCall tc;
 	int t, action;
@@ -172,7 +204,7 @@ void handle_tcp(int connfd, int msgq){
 	close (connfd);
 	exit(0);
 }
-
+*/
 
 
 
