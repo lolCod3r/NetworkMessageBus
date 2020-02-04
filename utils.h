@@ -32,6 +32,7 @@ struct tcp_call{
 	struct msgbuf msg;
 };
 
+int localIP;
 typedef struct tcp_call TcpCall;
 typedef int nmb_t;
 
