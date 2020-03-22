@@ -1,4 +1,4 @@
-#include "util.h"
+#include "utils.h"
 
 enum states{SEND=1, RCV, PRINT_DETAILS, SHOW_MENU, QUIT, WAIT};
 
