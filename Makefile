@@ -1,6 +1,5 @@
-server : local_server.c nmb.c utils.h
-	gcc local_server.c nmb.c -o server.o
+server : local_server.c util.h
+	gcc local_server.c -o server
 
-client : driver.c nmb.c utils.h
-	gcc driver.c nmb.c -o client.o
-
+driver : driver.c nmb.c util.h
+	gcc  nmb.c driver.c -o driver
