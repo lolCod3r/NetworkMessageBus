@@ -1,2 +1,4 @@
 patch.diff
 *.o
+driver
+server
